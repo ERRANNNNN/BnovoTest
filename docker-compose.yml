@@ -1,0 +1,43 @@
+services:
+    nginx:
+        image: nginx:latest
+        ports:
+            - 8080:80
+        volumes:
+            - ./.docker/nginx/conf.d/:/etc/nginx/conf.d/
+            - ./:/var/www
+        container_name: bnovo_nginx
+        depends_on:
+            - app
+    app:
+        build:
+            context: .
+            dockerfile: .docker/app/Dockerfile
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - db
+        container_name: bnovo_app
+    db:
+        image: mysql:8.0
+        restart: always
+        volumes:
+            - ./.docker/tmp/db:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: acs
+            MYSQL_ROOT_PASSWORD: secret
+        ports:
+            - 8101:3306
+        command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+        container_name: bnovo_db
+    phpmyadmin:
+        image: phpmyadmin:latest
+        restart: always
+        ports:
+            - "8082:80"
+        environment:
+            PMA_HOST: db
+            MYSQL_USER: root
+            MYSQL_PASSWORD: secret
+        links:
+            - db
